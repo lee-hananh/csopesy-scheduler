@@ -1,0 +1,5 @@
+num-cpu 4
+batch-process-freq 20
+min-ins 100
+max-ins 200
+delay-per-exec 0
