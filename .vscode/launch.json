@@ -1,0 +1,20 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Debug CSOPESY Emulator",
+            "type": "cppdbg",
+            "request": "launch",
+            "program": "${workspaceFolder}/emulator.exe",
+            "args": [],
+            "stopAtEntry": false,
+            "cwd": "${workspaceFolder}",
+            "environment": [],
+            "externalConsole": false,
+            "integratedTerminal": true,
+            "MIMode": "gdb",
+            "miDebuggerPath": "gdb",
+            "preLaunchTask": "Build CSOPESY Emulator"
+        }
+    ]
+}

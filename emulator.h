@@ -3,6 +3,17 @@
 #include <mutex>
 #include <string>
 #include <vector>
+#include <map>
+#include <cstdint>
+
+enum class OpCode { PRINT, DECLARE, ADD, SUBTRACT, SLEEP, FOR_LOOP };
+
+struct Instruction {
+    OpCode op;
+    std::string var1;  
+    uint16_t val1 = 0;
+    std::string msg;   
+};
 
 struct Config {
     int numCpu = 4;
@@ -22,6 +33,8 @@ struct Process {
     std::string startTime;
     std::string endTime;
     std::vector<std::string> logs;
+    std::map<std::string, uint16_t> variables; 
+    std::vector<Instruction> instructions;   
 };
 
 extern Config cfg;

@@ -1,0 +1,13 @@
+CPU utilization: 75%
+Cores used: 3
+Cores available: 1
+
+--------------------------------------
+Running processes:
+p02        (11/02/2026 02:36:21PM)  Core: 0  74 / 192
+p03        (11/02/2026 02:36:22PM)  Core: 1  54 / 189
+p04        (11/02/2026 02:36:23PM)  Core: 2  34 / 141
+
+Finished processes:
+p01        (11/02/2026 02:35:37PM)  Finished  159 / 159
+--------------------------------------

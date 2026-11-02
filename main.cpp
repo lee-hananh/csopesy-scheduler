@@ -48,11 +48,12 @@ int randomInt(int lo, int hi) {
 }
 
 void clearScreen() {
-#ifdef _WIN32
-    system("cls");
-#else
-    cout << "\033[2J\033[H";
-#endif
+// #ifdef _WIN32
+//     system("cls");
+// #else
+//     cout << "\033[2J\033[H";
+// #endif
+    cout << string(50, '\n');
 }
 
 ProcPtr findProcess(const string& name) {
