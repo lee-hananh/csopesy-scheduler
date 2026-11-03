@@ -18,6 +18,7 @@
 
 using namespace std;
 
+// one cpu tick (in ms)
 const int TICK_MS = 50;
 
 using ProcPtr = shared_ptr<Process>;
@@ -28,13 +29,16 @@ bool initialized = false;
 condition_variable cv;
 queue<ProcPtr> readyQueue;
 vector<ProcPtr> allProcs;
-vector<bool> coreBusy;
+vector<bool> coreBusy;              // busy flag for each core
 vector<thread> workers;
-thread generator;
-atomic<bool> stopAll{false};
-atomic<bool> generating{false};
+thread generator;                   // dummy process generator
+thread sleeper;                     // counts down sleep ticks
+vector<ProcPtr> sleepers;           // processes currently blocked on sleep
+atomic<bool> stopAll{false};        // signals all threads to terminate
+atomic<bool> generating{false};     // true while scheduler-start is active
 int nextId = 1;
 
+// returns current local time (MM/DD/YYYY HH:MM:SSAM/PM)
 string now() {
     time_t t = time(nullptr);
     char buf[32];
@@ -76,6 +80,8 @@ ProcPtr makeProcess(const string& name) {
     return p;
 }
 
+// the cpu core thread
+// waits for process in ready queue then executes one instruction per tick
 void workerLoop(int core) {
     while (true) {
         ProcPtr p;
@@ -93,17 +99,40 @@ void workerLoop(int core) {
             lock_guard<mutex> lk(mtx);
             execInstruction(*p, core);
             if (p->done >= p->total) break;
+            if (p->sleepTicks > 0) break;  // sleep -> relinquish cpu
         }
         lock_guard<mutex> lk(mtx);
         if (p->done >= p->total) {
             p->finished = true;
             p->endTime = now();
+        } else if (p->sleepTicks > 0) {
+            sleepers.push_back(p);
         }
         p->core = -1;
         coreBusy[core] = false;
     }
 }
 
+// sleep manager
+// decrements remaining sleep ticks every tick then returns process back to ready queue when it reaches 0
+void sleeperLoop() {
+    while (!stopAll) {
+        this_thread::sleep_for(chrono::milliseconds(TICK_MS));
+        lock_guard<mutex> lk(mtx);
+        for (auto it = sleepers.begin(); it != sleepers.end();) {
+            if (--(*it)->sleepTicks <= 0) {
+                (*it)->sleepTicks = 0;
+                readyQueue.push(*it);
+                cv.notify_one();
+                it = sleepers.erase(it);
+            } else {
+                ++it;
+            }
+        }
+    } 
+}
+
+// process generator
 void generatorLoop() {
     while (!stopAll) {
         for (int t = 0; t < cfg.batchFreq && !stopAll; t++)
@@ -129,6 +158,7 @@ void generatorLoop() {
     }
 }
 
+// builds cpu utilizization report
 string buildReport() {
     lock_guard<mutex> lk(mtx);
     int busy = 0;
@@ -153,6 +183,7 @@ string buildReport() {
     return out.str();
 }
 
+// prints process name, id, print logs, finished or current instruction line, and total lines of code
 void processSmi(const ProcPtr& p) {
     lock_guard<mutex> lk(mtx);
     cout << "Process name: " << p->name << "\n";
@@ -168,6 +199,7 @@ void processSmi(const ProcPtr& p) {
     }
 }
 
+// process screen loop
 void enterScreen(const ProcPtr& p) {
     clearScreen();
     processSmi(p);
@@ -186,19 +218,23 @@ void enterScreen(const ProcPtr& p) {
     clearScreen();
 }
 
+// loads config.txt and starts generator and sleeper threads
 void initialize() {
     loadConfig();
     coreBusy.assign(cfg.numCpu, false);
     for (int i = 0; i < cfg.numCpu; i++) workers.emplace_back(workerLoop, i);
     generator = thread(generatorLoop);
+    sleeper = thread(sleeperLoop);
     initialized = true;
 }
 
+// stops and joins all worker, generator, and sleeper threads
 void shutdown() {
     stopAll = true;
     cv.notify_all();
     for (auto& w : workers) w.join();
     if (generator.joinable()) generator.join();
+    if (sleeper.joinable()) sleeper.join();
 }
 
 void printBanner() {
@@ -215,6 +251,7 @@ void printBanner() {
     cout << "----------------------------------------\n";
 }
 
+// handles the screen commands
 void handleScreen(const vector<string>& args) {
     if (args.size() >= 3 && args[1] == "-s") {
         if (findProcess(args[2])) {
