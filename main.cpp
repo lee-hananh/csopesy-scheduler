@@ -246,7 +246,7 @@ void printBanner() {
 )ART";
     cout << "----------------------------------------\n";
     cout << "Welcome to CSOPESY Emulator!\n\n";
-    cout << "Developers:\n<add names here>\n\n";
+    cout << "Developers:\nGuillermo, Lee, Lim\n\n";
     cout << "Last updated: 10-31-2026\n";
     cout << "----------------------------------------\n";
 }
