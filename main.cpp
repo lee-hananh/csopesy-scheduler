@@ -135,7 +135,8 @@ void sleeperLoop() {
 // process generator
 void generatorLoop() {
     while (!stopAll) {
-        for (int t = 0; t < cfg.batchFreq && !stopAll; t++)
+        long long wait = (long long)cfg.batchFreq * cfg.maxIns;
+        for (long long t = 0; t < wait && !stopAll; t++)
             this_thread::sleep_for(chrono::milliseconds(TICK_MS));
         if (stopAll) return;
         if (!generating) continue;
