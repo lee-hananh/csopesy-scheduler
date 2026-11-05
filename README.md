@@ -25,8 +25,9 @@ A command-line interpreter (CLI) and multi-core process scheduler emulator built
 ## Requirements
 
 - Windows 10 or 11 (64-bit)
-- Visual Studio 2022 (17.10 or newer, needed for `.slnx` files) with the **Desktop development with C++** workload installed
-- GLFW and Dear ImGui are already included in the repository, so no extra installation is needed
+- Visual Studio Code with the **C/C++ Extension Pack** installed
+- C++17 compliant compiler (GCC / MinGW-w64, Clang, or MSVC toolset)
+- `config.txt` file located in the execution directory
 
 ## How to Run
 
